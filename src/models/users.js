@@ -1,5 +1,5 @@
-const mongoose = require("../database");
-const crypto = require("crypto");
+const mongoose = require('../database');
+const bcrypt = require('bcryptjs');
 const UserSchema = new mongoose.Schema({
   name: {
     type: String,
@@ -14,8 +14,7 @@ const UserSchema = new mongoose.Schema({
   password: {
     type: String,
     required: true,
-    select: false,
-    set: (value) => crypto.createHash("md5").update("value").digest("hex")
+    select: false
   },
   createdAt: {
     type: Date,
@@ -23,4 +22,9 @@ const UserSchema = new mongoose.Schema({
   },
 });
 
-module.exports = mongoose.model("User", UserSchema);
+UserSchema.pre('save', async function(next) {
+    const hash = await bcrypt.hash(this.password, 10);
+    this.password = hash;
+    next();
+})
+module.exports = mongoose.model('User', UserSchema);
